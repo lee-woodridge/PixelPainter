@@ -1,23 +1,22 @@
 PixelCanvas = require "./pixel_canvas"
 
-loops = 0
-
 init = () ->
 	canvas = document.getElementById 'game'
 	# Set up the pixel canvas.
-	PixelCanvas.createGameCanvas canvas, 627, 627, 10, 10, 7, 'rgba(189, 195, 199, 1.0)'
+	PixelCanvas.createGameCanvas canvas, 60, 10, 6, 7, 'rgba(189, 195, 199, 1.0)'
 	gameObjectArgs = {
 		gridX: 1
 		gridY: 2
+		defaultColour: 'rgba(243, 156, 18, 1.0)'
 	}
 	PixelCanvas.createGameObject gameObjectArgs
-	# @pixelCanvas = new PixelCanvas canvas, 627, 627, 10, 10, 7, 'rgba(189, 195, 199, 1.0)'
 	# Set up the game status.
 
 	# Start the game loop.
 	gameLoop()
 
 gameLoop = () ->
-	# setTimeout gameLoop, 25 # 40 fps
+	# setTimeout gameLoop, 20 # 50 fps
+	PixelCanvas.updateGameCanvas()
 
 init()

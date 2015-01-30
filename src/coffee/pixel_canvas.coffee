@@ -25,19 +25,49 @@ class SquareGrid
 	constructor: (@gridWidth, @gridHeight, @defaultSquareColour) ->
 		@grid = ((new Square(i-1, j-1, @defaultSquareColour) for j in [1..@gridHeight]) for i in [1..@gridWidth])
 		@changed = []
-		console.log @grid
 
-	changeSquare: (x, y, z, colour) ->
-		if z >= @grid[x][y].z
-			console.log "changed square " + x + "," + y
-			@grid[x][y].colour = colour
+	moveObjectIntoSquare: (x, y, z, colour) ->
+		if @grid[x][y].pushColour colour, z
 			@changed.push @grid[x][y]
-			console.log @grid[x][y]
+
+	moveObjectFromSquare: (x, y, z, colour) ->
+		@grid[x][y].popColour colour, z
+		@changed.push @grid[x][y]
 
 # Class containing information needed to draw a square in the grid.
 class Square
+	# Square has a stack of colours which has been assigned to it, to handle overlapping shapes.
 	constructor: (@x, @y, @colour) ->
 		@z = 0
+		@colourKeeper = [{z: 0, colour: @colour}]
+
+	pushColour: (colour, z) ->
+		# Add colour to the keeper.
+		@colourKeeper.push {z: z, colour: colour}
+		# If it's higher than out current z, this is the new square colour.
+		if z > @z
+			@z = z
+			@colour = colour
+			return true
+		else
+			return false
+
+	popColour: (colour, z) ->
+		# Remove this colour from the keeper.
+		for info, key in @colourKeeper
+			if info.z is z and info.colour is colour
+				@colourKeeper.splice(key, 1)
+				break
+		# If we removed the current colour, we need to find the next-highest colour.
+		if z is @z
+			new_colour = @colourKeeper[0].colour
+			largest_z = @colourKeeper[0].z
+			for info in @colourKeeper
+				if info.z > largest_z
+					largest_z = info.z
+					new_colour = info.colour
+			@z = largest_z
+			@colour = new_colour
 
 # Class that's given to the user to control their game objects on our canvas.
 class GameObject
@@ -50,9 +80,9 @@ class GameObject
 		# Check if bitmap exists.
 		if @bitmap?
 			# Check it's the correct size.
-			if @bitmap.length == @boundingY
+			if @bitmap.length is @boundingY
 				for row in @bitmap
-					if row.length != @boundingX
+					if row.length is not @boundingX
 						throw "Bitmap width doesn't match claimed bounding size."
 			else
 				throw "Bitmap height doesn't match claimed bounding size."
@@ -60,11 +90,32 @@ class GameObject
 			if (@boundingX > 1 or @boundingY > 1)
 				((1 for i in [1..@boundingX]) for j in [1..@boundingY])
 		@z ?= 0
-		@firstDraw()
+		@draw()
 
-	firstDraw: () ->
+	draw: () ->
 		if not @bitmap?
-			_squareGrid.changeSquare(@gridX, @gridY, @z, @defaultColour)
+			_squareGrid.moveObjectIntoSquare @gridX, @gridY, @z, @defaultColour
+		else
+			for i in [0..@boundingX-1]
+				for j in [0..@boundingY-1]
+					if @bitmap[i][j]
+						_squareGrid.moveObjectIntoSquare @gridX + i, @gridY + j, @z, @defaultColour
+
+	moveTo: (x, y) ->
+		# Change old square back to the default colour.
+		if not @bitmap?
+			_squareGrid.moveObjectFromSquare @gridX, @gridY, @z, @defaultColour
+		else
+			for i in [0..@boundingX-1]
+				for j in [0..@boundingY-1]
+					if @bitmap[i][j]
+						_squareGrid.moveObjectFromSquare @gridX + i, @gridY + j, @z, @defaultColour
+		@gridX = x
+		@gridY = y
+		@draw()
+
+	moveBy: (x, y) ->
+		@moveTo (@gridX + x), (@gridY + y)
 
 # Class in charge of holding the canvas object and drawing on it.
 class PixelCanvas
@@ -96,7 +147,6 @@ class PixelCanvas
 	# Draw the changed squares.
 	draw: () ->
 		for square in _squareGrid.changed
-			console.log square
 			@context.fillStyle = square.colour
 			@context.fillRect square.x*@placementWidth, square.y*@placementHeight,
 				@squareDim, @squareDim

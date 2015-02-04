@@ -98,7 +98,7 @@ class GameObject
 		else
 			for i in [0..@boundingX-1]
 				for j in [0..@boundingY-1]
-					if @bitmap[i][j]
+					if @bitmap[j][i]
 						_squareGrid.moveObjectIntoSquare @gridX + i, @gridY + j, @z, @defaultColour
 
 	moveTo: (x, y) ->
@@ -108,7 +108,7 @@ class GameObject
 		else
 			for i in [0..@boundingX-1]
 				for j in [0..@boundingY-1]
-					if @bitmap[i][j]
+					if @bitmap[j][i]
 						_squareGrid.moveObjectFromSquare @gridX + i, @gridY + j, @z, @defaultColour
 		@gridX = x
 		@gridY = y

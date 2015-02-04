@@ -18,12 +18,15 @@ init = () ->
 		gridX: 5
 		gridY: 5
 		defaultColour: 'rgba(39, 174, 96, 1.0)'
-		boundingX: 3
-		boundingY: 3
+		boundingX: 5
+		boundingY: 6
 		bitmap: [
-			[0,1,0]
-			[1,1,1]
-			[0,1,0]
+			[1,0,0,0,1]
+			[0,1,1,1,0]
+			[0,1,1,1,0]
+			[0,1,1,1,0]
+			[1,0,1,0,1]
+			[0,0,1,0,0]
 		]
 		z: 2
 	}

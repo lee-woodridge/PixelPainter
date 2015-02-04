@@ -1,10 +1,16 @@
 gulp = require "gulp"
 gutil = require "gulp-util"
+argv = require("yargs").argv
+fs = require "fs"
 $ = require('gulp-load-plugins')()
 express = require 'express'
 
 gulp.task "scripts", ->
-	return gulp.src('src/coffee/game.coffee', { read: false })
+	filepath = 'src/coffee/' + argv.game + '.coffee' 
+	if not fs.existsSync filepath
+		console.log filepath + " doesn't exist."
+		process.exit(1);
+	return gulp.src(filepath, { read: false })
 		.pipe($.browserify({
 			transform: ['coffeeify'],
 			extensions: ['.coffee']

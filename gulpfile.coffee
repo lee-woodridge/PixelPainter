@@ -25,7 +25,11 @@ gulp.task "jade", ->
 		.pipe gulp.dest("./public")
 		.pipe $.livereload()
 
-gulp.task "default", ["scripts", "jade"], ->
+gulp.task "css", ->
+	return gulp.src("src/css/*.css")
+		.pipe(gulp.dest("./public"))
+
+gulp.task "default", ["scripts", "jade", "css"], ->
 	app = express()
 	app.use require('connect-livereload')()
 	app.use express.static "#{__dirname}/public"
@@ -36,3 +40,4 @@ gulp.task "default", ["scripts", "jade"], ->
 
 	gulp.watch "src/**/*.coffee", ["scripts"]
 	gulp.watch "src/**/*.jade", ["jade"]
+	gulp.watch "src/**/*.css", ["css"]

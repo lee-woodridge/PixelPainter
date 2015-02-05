@@ -117,18 +117,24 @@ class GameObject
 	moveBy: (x, y) ->
 		@moveTo (@gridX + x), (@gridY + y)
 
+	# assignOnClick: (f) ->
+
+
 # Class in charge of holding the canvas object and drawing on it.
 class PixelCanvas
 	# Change constructor to take named args like in GameObject.
 	constructor: (@canvas, @squareDim, @gridWidth, @gridHeight, @squareGap, @defaultSquareColour) ->
 		# Get the canvas context and set it's size.
 		@context = @canvas.getContext '2d'
+		@canvasBoundingBox = @canvas.getBoundingClientRect()
 		# Work out the canvas size.
 		@canvas.width = (@squareDim*@gridWidth) + (@squareGap*(@gridWidth-1))
 		@canvas.height = (@squareDim*@gridHeight) + (@squareGap*(@gridHeight-1))
 		# Work out placement values.
 		@placementWidth = @squareDim + @squareGap
 		@placementHeight = @squareDim + @squareGap
+		# Add event listeners on the canvas.
+		@canvas.addEventListener 'click', (evt) => @onClick(evt)
 		@firstDraw()
 
 	# As canvas is update based, the first draw we need to fill all the squares.
@@ -150,6 +156,16 @@ class PixelCanvas
 			@context.fillStyle = square.colour
 			@context.fillRect square.x*@placementWidth, square.y*@placementHeight,
 				@squareDim, @squareDim
+
+	onClick: (evt) ->
+		mousePos = {
+			x: evt.clientX - @canvasBoundingBox.left
+			y: evt.clientY - @canvasBoundingBox.top
+		}
+		if mousePos.x %% @placementWidth < @squareDim &&
+		mousePos.y %% @placementHeight < @squareDim
+			console.log "clicked a square"
+
 
 	# Clear the changed-squares-array. 
 	clear: () ->

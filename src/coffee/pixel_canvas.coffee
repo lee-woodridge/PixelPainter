@@ -104,6 +104,11 @@ class Square
 		else
 			throw "Attempting to remove a GameObject from a position where it doesn't exist."
 
+	runOnClick: () ->
+		if @topGameObject?
+			if @topGameObject.onClick?
+				@topGameObject.onClick()
+
 # Class that's given to the user to control their game objects on our canvas.
 class GameObject
 	constructor: (@gridX, @gridY, @boundingX, @boundingY, @defaultColour, @bitmap, @z) ->
@@ -153,8 +158,8 @@ class GameObject
 	moveBy: (x, y) ->
 		@moveTo (@gridX + x), (@gridY + y)
 
-	# assignOnClick: (f) ->
-
+	assignOnClick: (f) ->
+		@onClick = f
 
 # Class in charge of holding the canvas object and drawing on it.
 class PixelCanvas
@@ -200,8 +205,9 @@ class PixelCanvas
 		}
 		if mousePos.x %% @placementWidth < @squareDim &&
 		mousePos.y %% @placementHeight < @squareDim
-			console.log "clicked a square"
-
+			x = Math.floor mousePos.x / @placementWidth
+			y = Math.floor mousePos.y / @placementHeight
+			_squareGrid.grid[x][y].runOnClick()
 
 	# Clear the changed-squares-array. 
 	clear: () ->

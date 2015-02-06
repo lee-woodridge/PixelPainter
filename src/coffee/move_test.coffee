@@ -3,6 +3,9 @@ PixelCanvas = require "./pixel_canvas"
 square = {}
 cross = {}
 
+randomNum = (max, min=0) ->
+	return Math.floor(Math.random() * (max - min) + min)
+
 init = () ->
 	canvas = document.getElementById 'game'
 	# Set up the pixel canvas.
@@ -31,6 +34,10 @@ init = () ->
 		z: 2
 	}
 	cross = PixelCanvas.createGameObject crossObjectArgs
+	crossFunc = ->
+		cross.moveTo(randomNum(20-5), randomNum(12-6))
+		PixelCanvas.updateGameCanvas()
+	cross.assignOnClick crossFunc
 
 	# Set up the game status.
 

@@ -1,6 +1,7 @@
 # Global variables, private from the user.
 _pixelCanvas = {}
 _squareGrid = {}
+_gameObjectId = 0
 
 # API Functions.
 # PixelCanvas functions.
@@ -26,52 +27,87 @@ class SquareGrid
 		@grid = ((new Square(i-1, j-1, @defaultSquareColour) for j in [1..@gridHeight]) for i in [1..@gridWidth])
 		@changed = []
 
-	moveObjectIntoSquare: (x, y, z, colour) ->
-		if @grid[x][y].pushColour colour, z
+	moveObjectIntoSquare: (x, y, gameObject) ->
+		if @grid[x][y].addGameObject gameObject
 			@changed.push @grid[x][y]
 
-	moveObjectFromSquare: (x, y, z, colour) ->
-		@grid[x][y].popColour colour, z
-		@changed.push @grid[x][y]
+	moveObjectFromSquare: (x, y, gameObject) ->
+		if @grid[x][y].removeGameObject gameObject
+			@changed.push @grid[x][y]
 
 # Class containing information needed to draw a square in the grid.
 class Square
 	# Square has a stack of colours which has been assigned to it, to handle overlapping shapes.
 	constructor: (@x, @y, @colour) ->
+		@defaultColour = @colour
 		@z = 0
-		@colourKeeper = [{z: 0, colour: @colour}]
+		@gameObjects = []
+		@topGameObject = {}
+		# @colourKeeper = [{z: 0, colour: @colour}]
 
-	pushColour: (colour, z) ->
-		# Add colour to the keeper.
-		@colourKeeper.push {z: z, colour: colour}
-		# If it's higher than out current z, this is the new square colour.
-		if z > @z
-			@z = z
-			@colour = colour
+	# Add gameObject to this Square, and return true if we changed the colour.
+	addGameObject: (gameObject) ->
+		# Handle adding the object.
+		@gameObjects.push gameObject
+		# Update any Square info this changes.
+		if @gameObjects.length == 0 or gameObject.z > @z
+			@topGameObject = gameObject
+			@z = gameObject.z
+			@colour = gameObject.defaultColour
 			return true
 		else
 			return false
 
-	popColour: (colour, z) ->
-		# Remove this colour from the keeper.
-		for info, key in @colourKeeper
-			if info.z is z and info.colour is colour
-				@colourKeeper.splice(key, 1)
-				break
-		# If we removed the current colour, we need to find the next-highest colour.
-		if z is @z
-			new_colour = @colourKeeper[0].colour
-			largest_z = @colourKeeper[0].z
-			for info in @colourKeeper
-				if info.z > largest_z
-					largest_z = info.z
-					new_colour = info.colour
-			@z = largest_z
-			@colour = new_colour
+	removeGameObject: (gameObject) ->
+		foundObjectToRemove = false
+		keyToRemove = 0
+		# Removing the top object requires some colour change logic.
+		if @topGameObject?
+			if gameObject.id == @topGameObject.id
+				currentHighestZ = Number.NEGATIVE_INFINITY
+				nextHighestObject = {}
+
+				# Handle removing the object and find the next highest GameObject.
+				for obj, key in @gameObjects
+					if obj.id == gameObject.id
+						foundObjectToRemove = true
+						keyToRemove = key
+					else
+						if obj.z > currentHighestZ
+							currentHighestZ = obj.z
+							nextHighestObject = obj
+
+				if foundObjectToRemove
+					@gameObjects.splice(keyToRemove, 1)
+					if @gameObjects.length == 0
+						@colour = @defaultColour
+						@z = 0
+						@topGameObject = {}
+					else
+						@colour = nextHighestObject.defaultColour
+						@z = nextHighestObject.z
+						@topGameObject = nextHighestObject
+					return true
+				else
+					throw "Attempting to remove a GameObject from a position where it doesn't exist."
+			else # Easier case.
+				for obj, key in @gameObjects
+					if obj.id == gameObject.id
+						foundObjectToRemove = true
+						keyToRemove = key
+
+				if foundObjectToRemove
+					@gameObjects.splice(keyToRemove, 1)
+					return false
+				else
+					throw "Attempting to remove a GameObject from a position where it doesn't exist."
+		else
+			throw "Attempting to remove a GameObject from a position where it doesn't exist."
 
 # Class that's given to the user to control their game objects on our canvas.
 class GameObject
 	constructor: (@gridX, @gridY, @boundingX, @boundingY, @defaultColour, @bitmap, @z) ->
+		@id = _gameObjectId++
 		if not @gridX? or not @gridY?
 			throw "gridX and gridY arguments required."
 		@boundingX ?= 1
@@ -94,22 +130,22 @@ class GameObject
 
 	draw: () ->
 		if not @bitmap?
-			_squareGrid.moveObjectIntoSquare @gridX, @gridY, @z, @defaultColour
+			_squareGrid.moveObjectIntoSquare @gridX, @gridY, @
 		else
 			for i in [0..@boundingX-1]
 				for j in [0..@boundingY-1]
 					if @bitmap[j][i]
-						_squareGrid.moveObjectIntoSquare @gridX + i, @gridY + j, @z, @defaultColour
+						_squareGrid.moveObjectIntoSquare @gridX + i, @gridY + j, @
 
 	moveTo: (x, y) ->
 		# Change old square back to the default colour.
 		if not @bitmap?
-			_squareGrid.moveObjectFromSquare @gridX, @gridY, @z, @defaultColour
+			_squareGrid.moveObjectFromSquare @gridX, @gridY, @
 		else
 			for i in [0..@boundingX-1]
 				for j in [0..@boundingY-1]
 					if @bitmap[j][i]
-						_squareGrid.moveObjectFromSquare @gridX + i, @gridY + j, @z, @defaultColour
+						_squareGrid.moveObjectFromSquare @gridX + i, @gridY + j, @
 		@gridX = x
 		@gridY = y
 		@draw()

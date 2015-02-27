@@ -4,6 +4,15 @@ html(lang='en')
 		meta(charset='utf-8')
 		title PixelPainter Test
 		link(rel='stylesheet', href='game.css')
-	body(style='background-color:rgba(236, 240, 241, 1.0)')
-		canvas#game
-		script(src='game.js')
+		link(href='http://fonts.googleapis.com/css?family=Montserrat:400,700',rel='stylesheet', type='text/css')
+	body
+		div#game-frame
+			h1#game-title REACTIONS
+			div#game-menu-container
+				ul#game-menu
+					li.menu-item#easy Easy
+					li.menu-item#medium Medium
+					li.menu-item#hard Hard
+				canvas#game-canvas
+				h2#score 0
+			script(src='game.js')

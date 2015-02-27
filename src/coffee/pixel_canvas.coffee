@@ -6,9 +6,16 @@ _gameObjectId = 0
 # API Functions.
 # PixelCanvas functions.
 # Create the canvas. Call once on initialization.
-createGameCanvas = (canvas, squareDim, gridWidth, gridHeight, squareGap, defaultSquareColour) ->
+createGameCanvas = ({canvas, squareDim, gridWidth, gridHeight, gridPixelWidth, gridPixelHeight, squareGap, defaultSquareColour} = {}) ->
 	_squareGrid = new SquareGrid gridWidth, gridHeight, defaultSquareColour
-	_pixelCanvas = new PixelCanvas canvas, squareDim, gridWidth, gridHeight, squareGap, defaultSquareColour
+	_pixelCanvas = new PixelCanvas canvas, gridWidth, gridHeight, squareGap, defaultSquareColour
+	if squareDim?
+		_pixelCanvas.setCanvasSizeBySquareDim squareDim
+	else if gridPixelWidth? && gridPixelHeight?
+		console.log "here"
+		_pixelCanvas.setCanvasSizeByBorder gridPixelWidth, gridPixelHeight
+	else
+		throw "Initializing GameCanvas requires either squareDim or gridPixelWidth and gridPixelHeight."
 	return
 
 # Update any changes to the canvas. Call once per game loop.
@@ -164,18 +171,32 @@ class GameObject
 # Class in charge of holding the canvas object and drawing on it.
 class PixelCanvas
 	# Change constructor to take named args like in GameObject.
-	constructor: (@canvas, @squareDim, @gridWidth, @gridHeight, @squareGap, @defaultSquareColour) ->
+	constructor: (@canvas, @gridWidth, @gridHeight, @squareGap, @defaultSquareColour) ->
 		# Get the canvas context and set it's size.
 		@context = @canvas.getContext '2d'
 		@canvasBoundingBox = @canvas.getBoundingClientRect()
+		# Add event listeners on the canvas.
+		@canvas.addEventListener 'click', (evt) => @onClick(evt)
+
+	setCanvasSizeBySquareDim: (@squareDim) ->
 		# Work out the canvas size.
 		@canvas.width = (@squareDim*@gridWidth) + (@squareGap*(@gridWidth-1))
 		@canvas.height = (@squareDim*@gridHeight) + (@squareGap*(@gridHeight-1))
+		console.log @canvas.width
+		console.log @canvas.height
 		# Work out placement values.
 		@placementWidth = @squareDim + @squareGap
 		@placementHeight = @squareDim + @squareGap
-		# Add event listeners on the canvas.
-		@canvas.addEventListener 'click', (evt) => @onClick(evt)
+		@firstDraw()
+
+	setCanvasSizeByBorder: (canvasWidth, canvasHeight) ->
+		# Work out the canvas size.
+		@canvas.width = canvasWidth
+		@canvas.height = canvasHeight
+		# Work out placement values.
+		@squareDim = Math.floor((canvasWidth - ((@gridWidth - 1) * @squareGap)) / @gridWidth)
+		@placementWidth = @squareDim + @squareGap
+		@placementHeight = @squareDim + @squareGap
 		@firstDraw()
 
 	# As canvas is update based, the first draw we need to fill all the squares.

@@ -23,11 +23,12 @@ gulp.task "jade", ->
 	return gulp.src("./src/jade/index.jade")
 		.pipe($.jade().on("error", gutil.log).on("error", gutil.beep))
 		.pipe gulp.dest("./public")
-		.pipe $.livereload()
+		.pipe($.livereload())
 
 gulp.task "css", ->
 	return gulp.src("src/css/*.css")
 		.pipe(gulp.dest("./public"))
+		.pipe($.livereload())
 
 gulp.task "default", ["scripts", "jade", "css"], ->
 	app = express()

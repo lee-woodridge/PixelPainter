@@ -1,3 +1,8 @@
+# This is a test file which just does a few set moves and then adds
+# functions to the two shapes so that if you click on them, they make
+# random movements. The main idea is to test colouring squares when
+# objects overlap.
+
 PixelCanvas = require "./pixel_canvas"
 
 square = {}
@@ -38,6 +43,11 @@ init = () ->
 		cross.moveTo(randomNum(20-5), randomNum(12-6))
 		PixelCanvas.updateGameCanvas()
 	cross.assignOnClick crossFunc
+
+	squareFunc = ->
+		square.moveTo(randomNum(4), randomNum(4))
+		PixelCanvas.updateGameCanvas()
+	square.assignOnClick squareFunc
 
 	# Set up the game status.
 
